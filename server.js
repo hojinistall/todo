@@ -7,7 +7,7 @@ const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'todos.json');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'docs')));
 
 // 데이터 파일 초기화
 function ensureDataFile() {
