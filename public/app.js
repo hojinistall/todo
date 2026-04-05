@@ -1,4 +1,4 @@
-const API = '/api/todos';
+const STORAGE_KEY = 'todo-app-data';
 const todoList = document.getElementById('todo-list');
 const todoForm = document.getElementById('todo-form');
 const todoInput = document.getElementById('todo-input');
@@ -10,65 +10,55 @@ const filterBtns = document.querySelectorAll('.filter-btn');
 let todos = [];
 let currentFilter = 'all';
 
-// API 호출
-async function fetchTodos() {
-  const res = await fetch(API);
-  todos = await res.json();
+// localStorage 기반 데이터 관리
+function saveTodos() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+}
+
+function loadTodos() {
+  todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   render();
 }
 
-async function addTodo(text) {
-  const res = await fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text })
+function addTodo(text) {
+  todos.push({
+    id: Date.now().toString(),
+    text: text.trim(),
+    completed: false,
+    createdAt: new Date().toISOString()
   });
-  if (res.ok) {
-    todos.push(await res.json());
-    render();
-  }
+  saveTodos();
+  render();
 }
 
-async function toggleTodo(id) {
+function toggleTodo(id) {
   const todo = todos.find(t => t.id === id);
-  const res = await fetch(`${API}/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ completed: !todo.completed })
-  });
-  if (res.ok) {
+  if (todo) {
     todo.completed = !todo.completed;
+    saveTodos();
     render();
   }
 }
 
-async function updateTodoText(id, text) {
-  const res = await fetch(`${API}/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text })
-  });
-  if (res.ok) {
-    const todo = todos.find(t => t.id === id);
-    todo.text = text;
+function updateTodoText(id, text) {
+  const todo = todos.find(t => t.id === id);
+  if (todo) {
+    todo.text = text.trim();
+    saveTodos();
     render();
   }
 }
 
-async function deleteTodo(id) {
-  const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
-  if (res.ok) {
-    todos = todos.filter(t => t.id !== id);
-    render();
-  }
+function deleteTodo(id) {
+  todos = todos.filter(t => t.id !== id);
+  saveTodos();
+  render();
 }
 
-async function clearCompleted() {
-  const res = await fetch(API, { method: 'DELETE' });
-  if (res.ok) {
-    todos = todos.filter(t => !t.completed);
-    render();
-  }
+function clearCompleted() {
+  todos = todos.filter(t => !t.completed);
+  saveTodos();
+  render();
 }
 
 // 렌더링
@@ -163,4 +153,4 @@ filterBtns.forEach(btn => {
 clearBtn.addEventListener('click', clearCompleted);
 
 // 초기 로드
-fetchTodos();
+loadTodos();
